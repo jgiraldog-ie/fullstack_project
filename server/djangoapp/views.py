@@ -1,15 +1,15 @@
 # Uncomment the required imports before adding the code
 
-# from django.shortcuts import render
-# from django.http import HttpResponseRedirect, HttpResponse
-# from django.contrib.auth.models import User
-# from django.shortcuts import get_object_or_404, render, redirect
-# from django.contrib.auth import logout
-# from django.contrib import messages
-# from datetime import datetime
+from django.shortcuts import render
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.contrib.auth.models import User
+from django.shortcuts import get_object_or_404, render, redirect
+from django.contrib.auth import logout
+from django.contrib import messages
+from datetime import datetime
 
 from django.http import JsonResponse
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -39,13 +39,46 @@ def login_user(request):
     return JsonResponse(data)
 
 # Create a `logout_request` view to handle sign out request
-# def logout_request(request):
-# ...
+def logout_request(request):
+    username = request.user.username
+    logout(request)
+    data = {"userName": username}
+    return JsonResponse(data)
 
 # Create a `registration` view to handle sign up request
-# @csrf_exempt
-# def registration(request):
-# ...
+@csrf_exempt
+def registration(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('userName')
+        password = data.get('password')
+        first_name = data.get('firstName')
+        last_name = data.get('lastName')
+        email = data.get('email')
+        
+        if not all([username, password, first_name, last_name, email]):
+            return HttpResponseBadRequest("Missing fields.")
+
+        # Check if username or email already exists
+        username_exists = User.objects.filter(username=username).exists()
+        email_exists = User.objects.filter(email=email).exists()
+
+        if username_exists or email_exists:
+            data = {"userName": username, "error": "Username or Email already registered"}
+            return JsonResponse(data)
+
+        # Create user
+        user = User.objects.create_user(username=username, first_name=first_name, last_name=last_name, password=password, email=email)
+        user = authenticate(username=username, password=password)
+        
+        if user is not None:
+            login(request, user)
+            data = {"userName": username, "status": "Authenticated"}
+            return JsonResponse(data)
+        else:
+            return HttpResponseBadRequest("Authentication failed after registration.")
+
+    return HttpResponseBadRequest("Invalid request method.")
 
 # # Update the `get_dealerships` view to render the index page with
 # a list of dealerships
