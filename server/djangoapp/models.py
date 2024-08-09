@@ -1,25 +1,51 @@
-# Uncomment the following imports before adding the Model code
-
-# from django.db import models
-# from django.utils.timezone import now
-# from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils.timezone import now
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 # Create your models here.
 
-# <HINT> Create a Car Make model `class CarMake(models.Model)`:
-# - Name
-# - Description
-# - Any other fields you would like to include in car make model
-# - __str__ method to print a car make object
+class CarMake(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField()
+    country = models.CharField(max_length=60)
+
+    def __str__(self):
+        return self.name
 
 
-# <HINT> Create a Car Model model `class CarModel(models.Model):`:
-# - Many-To-One relationship to Car Make model (One Car Make has many
-# Car Models, using ForeignKey field)
-# - Name
-# - Type (CharField with a choices argument to provide limited choices
-# such as Sedan, SUV, WAGON, etc.)
-# - Year (IntegerField) with min value 2015 and max value 2023
-# - Any other fields you would like to include in car model
-# - __str__ method to print a car make object
+class CarModel(models.Model):
+    car_make = models.ForeignKey(CarMake, on_delete=models.CASCADE)
+    name = models.CharField(max_length=50)
+    CAR_TYPES = [
+    ('SEDAN', 'Sedan'),
+    ('COUPE', 'Coupe'),
+    ('HATCHBACK', 'Hatchback'),
+    ('SUV', 'SUV'),
+    ('CROSSOVER', 'Crossover'),
+    ('CONVERTIBLE', 'Convertible'),
+    ('WAGON', 'Wagon'),
+    ('PICKUP', 'Pickup Truck'),
+    ('MINIVAN', 'Minivan'),
+    ('SPORTS_CAR', 'Sports Car'),
+    ('LUXURY_CAR', 'Luxury Car'),
+    ('ELECTRIC', 'Electric Vehicle'),
+    ('HYBRID', 'Hybrid Vehicle'),
+    ('COMPACT', 'Compact Car'),
+    ]
+    type = models.CharField(max_length=12, choices=CAR_TYPES, default='SUV')
+    year = models.IntegerField(default=2023,
+        validators=[
+            MaxValueValidator(2023),
+            MinValueValidator(2015)
+        ])
+    
+    TRANSMISSION_TYPES = [
+    ('MANUAL', 'Manual'),
+    ('AUTOMATIC', 'Automatic'),
+    ('CVT', 'Continuously Variable Transmission'),
+    ]
+    transmission = models.CharField(max_length=10, choices=TRANSMISSION_TYPES, default='AUTOMATIC')
+
+    def __str__(self):
+        return self.name

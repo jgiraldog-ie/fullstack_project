@@ -7,20 +7,43 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import logout
 from django.contrib import messages
 from datetime import datetime
+from .models import CarMake, CarModel
 
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate, logout
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
-# from .populate import initiate
+from .populate import initiate
 
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
+def get_cars(request):
+    count = CarMake.objects.filter().count()
+    print(count)
+    if(count == 0):
+        initiate()
+    cars = []
+    car_models = CarModel.objects.all()  # O ajusta el queryset según sea necesario
 
-# Create your views here.
+    for car_model in car_models:
+        cars.append({
+            "CarModel": {
+                "name": car_model.name,
+                "type": car_model.type,
+                "year": car_model.year,
+                "transmission": car_model.transmission,
+                "car_make": {
+                    "name": car_model.car_make.name,
+                    "description": car_model.car_make.description,
+                    "country": car_model.car_make.country
+                }
+            }
+        })
+    
+    return JsonResponse({"CarModels": cars})
 
 # Create a `login_request` view to handle sign in request
 @csrf_exempt
